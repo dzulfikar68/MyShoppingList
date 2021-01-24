@@ -1,35 +1,92 @@
 package id.refactory.myshoppinglist
 
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isEmpty
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import id.refactory.myshoppinglist.entity.Transact
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        supportActionBar?.title = "Absensi Online"
+        supportActionBar?.title = "My Shooping List"
 
-        pbLoading?.visibility = View.VISIBLE
-//        reference?.child(namaPath)?.addValueEventListener(object : ValueEventListener {
-//            override fun onCancelled(error: DatabaseError) {
-//                pbLoading?.visibility = View.GONE
-//                Toast.makeText(this@MainActivity, "Fetch Data Failed", Toast.LENGTH_LONG).show()
-//            }
-//
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                pbLoading?.visibility = View.GONE
-//                val userList = mutableListOf<UserItem>()
-//                for (noteDataSnapshot in snapshot.children) {
-//                    val userItem: UserItem? = noteDataSnapshot.getValue(UserItem::class.java)
-//                    userItem?.let {
-//                        it.id = noteDataSnapshot.key
-//                        userList.add(it)
-//                    }
-//                }
-//                rvResult?.setListItem(userList.reversed())
-//            }
-//        })
+        create?.setOnClickListener {
+            openDialog()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        doAsync {
+            val transacts = AppDatabase.getInstance(this@MainActivity).transactDao().all
+            uiThread {
+                list?.setListItem(transacts)
+                if (list.isEmpty()) empty?.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    private fun getDate(): String {
+        val sdf = SimpleDateFormat("dd/M/yyyy")
+        return sdf.format(Date())
+    }
+
+    private fun RecyclerView.setListItem(items: List<Transact>?) {
+        layoutManager = LinearLayoutManager(context)
+        hasFixedSize()
+        adapter = TransactAdapter(items ?: emptyList()) {
+            val intent = Intent(this@MainActivity, DetailActivity::class.java)
+            intent.putExtra("data", it.uid)
+            startActivity(intent)
+        }
+    }
+
+    private fun openDialog() {
+        val view = layoutInflater.inflate(R.layout.view_transact_dialog, null, false)
+        val etName = view.findViewById<TextView>(R.id.name)
+        val btnSave = view.findViewById<TextView>(R.id.save)
+
+        val dialog = Dialog(view.context)
+        dialog.setContentView(view)
+        btnSave?.setOnClickListener {
+            val name = etName?.text.toString().trim()
+            doAsync {
+                val db = AppDatabase.getInstance(this@MainActivity).transactDao()
+                try {
+                    db.insert(
+                        Transact(
+                            nameTransact = name,
+                            createdDate = getDate(),
+                            updatedDate = "-"
+                        )
+                    )
+                    uiThread {
+                        Toast.makeText(this@MainActivity, "Create Success", Toast.LENGTH_LONG)
+                            .show()
+                    }
+                } catch (e: Exception) {
+                    uiThread {
+                        Toast.makeText(this@MainActivity, "Create Failed", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+
+        dialog.show()
     }
 }
