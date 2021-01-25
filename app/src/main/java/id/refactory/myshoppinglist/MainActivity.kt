@@ -4,16 +4,12 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import id.refactory.myshoppinglist.entity.Transact
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,13 +26,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        doAsync {
-            val transacts = AppDatabase.getInstance(this@MainActivity).transactDao().all
-            uiThread {
-                list?.setListItem(transacts)
-                if (transacts.isEmpty()) empty?.visibility = View.VISIBLE
-            }
-        }
+        //TODO
     }
 
     @SuppressLint("SimpleDateFormat")
@@ -63,29 +53,7 @@ class MainActivity : AppCompatActivity() {
         val dialog = Dialog(view.context)
         dialog.setContentView(view)
         btnSave?.setOnClickListener {
-            val name = etName?.text.toString().trim()
-            doAsync {
-                val db = AppDatabase.getInstance(this@MainActivity).transactDao()
-                try {
-                    db.insert(
-                        Transact(
-                            nameTransact = name,
-                            createdDate = getDate(),
-                            updatedDate = "-"
-                        )
-                    )
-                    uiThread {
-                        Toast.makeText(this@MainActivity, "Create Success", Toast.LENGTH_LONG)
-                                .show()
-                        dialog.dismiss()
-                        restartActivity()
-                    }
-                } catch (e: Exception) {
-                    uiThread {
-                        Toast.makeText(this@MainActivity, "Create Failed", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
+            //TODO
         }
 
         dialog.show()
