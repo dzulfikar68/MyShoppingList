@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isEmpty
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import id.refactory.myshoppinglist.entity.Transact
@@ -35,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             val transacts = AppDatabase.getInstance(this@MainActivity).transactDao().all
             uiThread {
                 list?.setListItem(transacts)
-                if (list.isEmpty()) empty?.visibility = View.VISIBLE
+                if (transacts.isEmpty()) empty?.visibility = View.VISIBLE
             }
         }
     }
@@ -77,7 +76,9 @@ class MainActivity : AppCompatActivity() {
                     )
                     uiThread {
                         Toast.makeText(this@MainActivity, "Create Success", Toast.LENGTH_LONG)
-                            .show()
+                                .show()
+                        dialog.dismiss()
+                        restartActivity()
                     }
                 } catch (e: Exception) {
                     uiThread {
@@ -88,5 +89,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.show()
+    }
+
+    private fun restartActivity() {
+        finish()
+        startActivity(intent)
     }
 }

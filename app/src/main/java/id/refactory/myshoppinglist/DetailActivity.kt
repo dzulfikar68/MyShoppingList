@@ -35,12 +35,12 @@ class DetailActivity : AppCompatActivity() {
             uiThread {
                 list?.setListItem(products)
                 if (products.isEmpty()) empty?.visibility = View.VISIBLE else {
-                    amount?.text = "amount: " + products.size
+                    amount?.text = "amount total: " + products.size
                     var money = 0
                     products.forEach {
                         money = money + (it.price * it.amount)
                     }
-                    price?.text = money.toString()
+                    price?.text = "price total: " + money.toString()
                 }
             }
         }
@@ -51,8 +51,8 @@ class DetailActivity : AppCompatActivity() {
             uiThread {
                 myTransact = data
                 name?.setText(myTransact?.nameTransact ?: "")
-                created_date?.text = myTransact?.createdDate ?: "-"
-                updated_date?.text = myTransact?.updatedDate ?: "-"
+                created_date?.text = "created date: " + (myTransact?.createdDate ?: "-")
+                updated_date?.text = "updated date: " + (myTransact?.updatedDate ?: "-")
             }
         }
 

@@ -36,10 +36,10 @@ class ProductAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.tvName?.text = item.nameProduct
-        holder.tvAmount?.text = item.amount.toString()
-        holder.tvPrice?.text = item.price.toString()
-        holder.tvTotal?.text = (item.price * item.amount).toString()
+        holder.tvName?.text = "name: " + item.nameProduct
+        holder.tvAmount?.text = "amount: " + item.amount.toString()
+        holder.tvPrice?.text = "price: " + item.price.toString()
+        holder.tvTotal?.text = "total: " + (item.price * item.amount).toString()
         holder.itemView.setOnClickListener {
             event.invoke(item)
         }
