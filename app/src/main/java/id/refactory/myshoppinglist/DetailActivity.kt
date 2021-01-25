@@ -4,20 +4,24 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import id.refactory.myshoppinglist.entity.Product
 import id.refactory.myshoppinglist.entity.Transact
 import kotlinx.android.synthetic.main.activity_detail.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 class DetailActivity : AppCompatActivity() {
 
-    //TODO
+    private var myTransact: Transact? = null
     private fun getIdTransact(): Int = intent?.getIntExtra("data", 0) ?: 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +29,32 @@ class DetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_detail)
         supportActionBar?.title = "Shooping Detail"
 
-        //TODO
+        doAsync {
+            val db = AppDatabase.getInstance(this@DetailActivity).transactDao()
+            val data = db.detail(getIdTransact())
+            uiThread {
+                myTransact = data
+                name?.setText(myTransact?.nameTransact ?: "")
+                created_date?.text = "created date: " + (myTransact?.createdDate ?: "-")
+                updated_date?.text = "created date: " + (myTransact?.updatedDate ?: "-")
+            }
+        }
 
-        //TODO
+        doAsync {
+            val db = AppDatabase.getInstance(this@DetailActivity).productDao()
+            val products = db.allByTransact(getIdTransact())
+            uiThread {
+                list?.setListItem(products)
+                if (products.isEmpty()) empty?.visibility = View.VISIBLE else {
+                    amount?.text = "amount total: " + products.size
+                    var money = 0
+                    products.forEach {
+                        money = money + (it.price * it.amount)
+                    }
+                    price?.text = "price total: " + money.toString()
+                }
+            }
+        }
 
         create?.setOnClickListener {
             openDialogCreate(getIdTransact())
@@ -64,7 +91,32 @@ class DetailActivity : AppCompatActivity() {
         val dialog = Dialog(view.context)
         dialog.setContentView(view)
         btnSave?.setOnClickListener {
-            //TODO
+            val name = etName?.text.toString().trim()
+            val amount = etAmount?.text.toString().trim()
+            val price = etPrice?.text.toString().trim()
+            doAsync {
+                val db = AppDatabase.getInstance(this@DetailActivity).productDao()
+                try {
+                    db.insert(
+                        Product(
+                            nameProduct = name,
+                            amount = amount.toInt(),
+                            price = price.toInt(),
+                            transactId = transactId
+                        )
+                    )
+                    uiThread {
+                        Toast.makeText(this@DetailActivity, "Create Success", Toast.LENGTH_LONG)
+                            .show()
+                        restartActivity()
+                    }
+                } catch (e: Exception) {
+                    uiThread {
+                        Toast.makeText(this@DetailActivity, "Create Failed", Toast.LENGTH_LONG)
+                            .show()
+                    }
+                }
+            }
         }
 
         dialog.show()
@@ -76,7 +128,38 @@ class DetailActivity : AppCompatActivity() {
             .setCancelable(false)
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
-                //TODO
+                doAsync {
+                    val db = AppDatabase.getInstance(this@DetailActivity).transactDao()
+                    try {
+                        if (transact != null) {
+                            db.delete(transact)
+                            uiThread {
+                                Toast.makeText(
+                                    this@DetailActivity,
+                                    "Delete Success",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                finish()
+                            }
+                        } else {
+                            uiThread {
+                                Toast.makeText(
+                                    this@DetailActivity,
+                                    "Delete Failed",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        uiThread {
+                            Toast.makeText(
+                                this@DetailActivity,
+                                "Delete Failed",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
             }
             .setNegativeButton("Cancel") { _, _ ->
             }
@@ -89,7 +172,28 @@ class DetailActivity : AppCompatActivity() {
         builder.setMessage("Hapus Item ini?")
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
-                //TODO
+                doAsync {
+                    val db = AppDatabase.getInstance(this@DetailActivity).productDao()
+                    try {
+                        db.delete(product)
+                        uiThread {
+                            Toast.makeText(
+                                this@DetailActivity,
+                                "Delete Success",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            restartActivity()
+                        }
+                    } catch (e: Exception) {
+                        uiThread {
+                            Toast.makeText(
+                                this@DetailActivity,
+                                "Delete Failed",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
             }
             .setNegativeButton("Cancel") { _, _ ->
             }
